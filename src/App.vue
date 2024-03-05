@@ -1,11 +1,12 @@
 <template>
   <div class="container">
-    <img src="../public/blibli.png" alt="" />
+    <img src="../blibli.png" alt="" />
     <h1 class="title-page">Create Your Blog</h1>
     <div class="box">
       <InputField label="Title" inputId="title" v-model="titleInput" />
       <!-- <p>{{ titleInput }}</p> -->
       <InputField label="Description" inputId="desc" v-model="descInput" />
+      <p v-if="isError" class="error">{{ this.error }}</p>
       <ButtonComponent
         bg-color="#00A36C"
         padding="10px 20px"
@@ -15,15 +16,16 @@
     </div>
   </div>
   <div class="card-container">
-    <div v-for="(item, index) in toDoList" :key="index" class="card">
+    <!-- <div v-for="(item, index) in blogList.posts" :key="index" class="card"> -->
+    <div v-for="item in blogList" :key="item.id" class="card">
       <div class="card-body">
         <h2 v-if="!item.editing">{{ item.title }}</h2>
         <div v-else>
           <input type="text" v-model="item.title" class="edit-input" />
         </div>
-        <div v-if="!item.editing">{{ item.desc }}</div>
+        <div v-if="!item.editing">{{ item.body }}</div>
         <div v-else>
-          <input type="text" v-model="item.desc" class="edit-input" />
+          <input type="text" v-model="item.body" class="edit-input" />
         </div>
       </div>
       <!-- <div>{{ index + 1 }}</div> -->
@@ -53,88 +55,93 @@ export default {
     return {
       titleInput: "",
       descInput: "",
-      toDoList: [],
+      error: "",
+      blogList: [],
     };
   },
-  computed: {},
+  computed: {
+    isError() {
+      return this.error === "" ? false : true;
+    },
+  },
   components: {
     ButtonComponent,
     InputField,
   },
   methods: {
-    addToList() {
-      // console.log("Title Input:", this.titleInput);
-      // console.log("Desc Input:", this.descInput);
-      fetch("api/todo", {
-        method: "POST",
-        body: {
-          title: this.titleInput,
-          desc: this.descInput,
-        },
-      })
-        .then((res) => res.json())
-        .then((body) => {
-          alert(body.status);
-          this.fetchToDoList();
-          this.titleInput = "";
-          this.descInput = "";
-        });
-    },
-    toggleEdit(item) {
-      item.editing = !item.editing;
-      const itemToEdit = this.toDoList.find((item) => item.id === id);
-      if (!itemToEdit) {
-        alert("Item not found.");
-        return;
-      }
-
-      this.newItem.title = itemToEdit.title;
-      this.newItem.desc = itemToEdit.desc;
-
-      this.updateItem(id, {
-        title: this.newItem.title,
-        desc: this.newItem.desc,
-      });
-    },
-    updateItem(id, updatedData) {
-      fetch(`/api/todo/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          alert(data.status);
-          this.fetchToDoList();
-        });
-    },
-    deleteItem(id) {
-      fetch(`/api/todo/${id}`, {
-        method: "DELETE",
-      })
-        .then((res) => res.json())
-        .then((data) => {
-          alert(data.status);
-          this.fetchToDoList();
-        });
-    },
-    fetchToDoList() {
-      this.toDoList = [];
-      fetch(`/api/todo`, {
+    fetchBlogList() {
+      this.blogList = [];
+      fetch(`http://localhost:8080/api/posts`, {
         method: "GET",
       })
         .then((res) => res.json())
         .then((body) => {
           console.log(body);
-          this.toDoList = body.data; //this refers ke yg ada di data, bisa computed dll.
+          this.blogList = body.data;
+          // console.log("loh:" + this.blogList.length)
+        });
+    },
+    addToList() {
+      fetch("http://localhost:8080/api/posts", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: this.titleInput,
+          body: this.descInput,
+        }),
+      })
+        .then((res) => res.json())
+        .then((body) => {
+          if (body.code !== 200) {
+            this.error = body.message;
+          } else {
+            alert(body.status);
+            this.titleInput = "";
+            this.descInput = "";
+          }
+          this.fetchBlogList();
+        });
+    },
+    toggleEdit(item) {
+      item.editing = !item.editing;
+      if (!item.editing) {
+        this.updateItem(item);
+      }
+    },
+    updateItem(item) {
+      fetch(`http://localhost:8080/api/posts/${item.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: item.title,
+          body: item.body,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          item.editing = !item.editing;
+          this.fetchBlogList();
+        })
+        .catch((error) => {
+          console.error("Error updating item:", error);
+        });
+    },
+    deleteItem(id) {
+      fetch(`http://localhost:8080/api/posts/${id}`, {
+        method: "DELETE",
+      })
+        // .then((res) => res.json())
+        .then(() => {
+          this.fetchBlogList();
         });
     },
   },
   created() {
-    this.fetchToDoList();
-    console.log("print");
+    this.fetchBlogList();
   },
 };
 </script>
@@ -144,7 +151,13 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f5f5f5;
+  /* background-color: #f5f5f5; */
+  background-color: rgb(22, 20, 20);
+  color: #e8e2e2;
+  background:
+    url(/b7.jpg)
+    center / cover no-repeat fixed;
+  backdrop-filter: blur(3px);
 }
 
 .container {
@@ -156,7 +169,7 @@ body {
   border-radius: 5px;
 }
 
-.container > img{
+.container > img {
   width: 10vw;
 }
 
@@ -164,12 +177,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-radius: 5px; /* Rounded corners */
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-  background-color: #fff;
-  padding: 15px;
   margin-bottom: 10px;
   width: 50vw;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(35px);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.25);
+  padding: 20px 30px 30px 30px;
+  overflow: hidden;
 }
 
 .card-container {
@@ -178,34 +194,41 @@ body {
   flex-wrap: wrap;
 }
 
+.error {
+  color: red;
+}
+
 .card {
   display: flex;
   flex-direction: column;
   width: calc(50% - 20px);
   width: 25vw;
   margin: 10px;
-  background-image: linear-gradient(-70deg, #b1b2cb, transparent 50%);
+  /* background-image: linear-gradient(-70deg, #b1b2cb, transparent 50%); */
+  background: linear-gradient(71deg, #080509, #241e29, #080509);
   padding: 15px;
   /* background: rgba(255, 255, 255, 0.25); */
   border-radius: 16px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(35px);
+  /* border: 1px solid rgba(255, 255, 255, 0.4); */
+  border: 2px solid transparent;
 }
 
 .card:hover {
-  transform: scale(1.05) rotate(1deg);
+  transform: scale(1.05);
   transition-duration: 1s;
 }
 
 .card:nth-child(2n) {
   background-image: linear-gradient(-250deg, #97cee8, transparent 50%);
+  background: linear-gradient(71deg, #080509, #0a1925, #080509);
   border-radius: 16px;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  /* border: 1px solid rgba(255, 255, 255, 0.4); */
+  box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.25);
+  border: 2px solid transparent;
 }
 
 .action {

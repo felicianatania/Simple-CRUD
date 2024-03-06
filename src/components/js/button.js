@@ -18,7 +18,7 @@ export default {
         },
 
         backgroundColor(){
-            let bgColor = this.bgColor ? this.bgColor : '#0072FF'
+            let bgColor = this.bgColor ? this.bgColor : '#408FDE'
             return "background: " + bgColor + ';';
         },
 

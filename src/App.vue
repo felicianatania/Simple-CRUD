@@ -95,13 +95,19 @@ export default {
         .then((res) => res.json())
         .then((body) => {
           if (body.code !== 200) {
-            this.error = body.message;
+            this.error = body.error;
           } else {
+            // console.log(body)
             alert(body.status);
+            this.error = "";
             this.titleInput = "";
             this.descInput = "";
           }
           this.fetchBlogList();
+        })
+        .catch((error) => {
+          console.error("Error updating item:", error);
+          alert("Failed to add item: " + error.message);
         });
     },
     toggleEdit(item) {

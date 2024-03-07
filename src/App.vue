@@ -128,9 +128,13 @@ export default {
         }),
       })
         .then((res) => res.json())
-        .then((data) => {
+        .then((body) => {
           item.editing = !item.editing;
-          this.fetchBlogList();
+          if (body.code !== 200) {
+            alert(body.error)
+          } else{
+            this.fetchBlogList();
+          }
         })
         .catch((error) => {
           console.error("Error updating item:", error);

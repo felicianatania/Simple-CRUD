@@ -11,7 +11,7 @@
         bg-color="#00A36C"
         padding="10px 20px"
         text="Add"
-        @click="addToList()"
+        @click="addToList(titleInput, descInput);"
       ></ButtonComponent>
     </div>
   </div>
@@ -49,19 +49,20 @@
 <script>
 import ButtonComponent from "./components/Button.vue";
 import InputField from "./components/Input.vue";
+import { useBlogStore } from "./stores/blog.js";
+import { mapActions, mapState } from "pinia";
 
 export default {
   data() {
     return {
       titleInput: "",
       descInput: "",
-      error: "",
-      blogList: [],
     };
   },
   computed: {
+    ...mapState(useBlogStore, ["blogList", "error"]),
     isError() {
-      return this.error === "" ? false : true;
+      return this.error !== "";
     },
   },
   components: {
@@ -69,85 +70,15 @@ export default {
     InputField,
   },
   methods: {
-    fetchBlogList() {
-      this.blogList = [];
-      fetch(`http://localhost:8080/api/posts`, {
-        method: "GET",
-      })
-        .then((res) => res.json())
-        .then((body) => {
-          console.log(body);
-          this.blogList = body.data;
-          // console.log("loh:" + this.blogList.length)
-        });
-    },
-    addToList() {
-      fetch("http://localhost:8080/api/posts", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: this.titleInput,
-          body: this.descInput,
-        }),
-      })
-        .then((res) => res.json())
-        .then((body) => {
-          if (body.code !== 200) {
-            this.error = body.error;
-          } else {
-            // console.log(body)
-            alert(body.status);
-            this.error = "";
-            this.titleInput = "";
-            this.descInput = "";
-          }
-          this.fetchBlogList();
-        })
-        .catch((error) => {
-          console.error("Error updating item:", error);
-          alert("Failed to add item: " + error.message);
-        });
-    },
-    toggleEdit(item) {
-      item.editing = !item.editing;
-      if (!item.editing) {
-        this.updateItem(item);
-      }
-    },
-    updateItem(item) {
-      fetch(`http://localhost:8080/api/posts/${item.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: item.title,
-          body: item.body,
-        }),
-      })
-        .then((res) => res.json())
-        .then((body) => {
-          item.editing = !item.editing;
-          if (body.code !== 200) {
-            alert(body.error)
-          } else{
-            this.fetchBlogList();
-          }
-        })
-        .catch((error) => {
-          console.error("Error updating item:", error);
-        });
-    },
-    deleteItem(id) {
-      fetch(`http://localhost:8080/api/posts/${id}`, {
-        method: "DELETE",
-      })
-        // .then((res) => res.json())
-        .then(() => {
-          this.fetchBlogList();
-        });
+    ...mapActions(useBlogStore, [
+      "fetchBlogList",
+      "addToList",
+      "toggleEdit",
+      "deleteItem",
+    ]),
+    clearInput(){
+      this.titleInput = "";
+      this.descInput = "";
     },
   },
   created() {
@@ -164,9 +95,7 @@ body {
   /* background-color: #f5f5f5; */
   background-color: rgb(22, 20, 20);
   color: #e8e2e2;
-  background:
-    url(/b7.jpg)
-    center / cover no-repeat fixed;
+  background: url(/b7.jpg) center / cover no-repeat fixed;
   backdrop-filter: blur(3px);
 }
 
@@ -248,7 +177,8 @@ body {
 }
 
 .edit-input {
-  width: 100%;
+  width: 97%;
+  margin-top: 15px;
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 5px;

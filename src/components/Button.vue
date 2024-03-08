@@ -14,7 +14,7 @@
 <style>
 button {
   border-radius: 20px;
-  width: 10vw;
+  width: 13vw;
   border: none;
   text-align: center;
   padding: 10px 20px;

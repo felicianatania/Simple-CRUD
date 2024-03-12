@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import BlogDataService from "../services/dataService"
 
 export const useBlogStore = defineStore("blog", {
     state: () => ({
@@ -7,6 +8,7 @@ export const useBlogStore = defineStore("blog", {
         error: "",
         editingItemId: null,
         blogList: [],
+        categoryList: []
     }),
     getters: {
         isError: (state) => state.error !== "",
@@ -15,6 +17,17 @@ export const useBlogStore = defineStore("blog", {
         // isError() {
         //     return this.error === "" ? false : true;
         // },
+        fetchCategoryList() {
+            this.categoryList = [];
+            return fetch(`http://localhost:8080/api/categories`, {
+                method: "GET",
+            })
+            .then((res) => res.json())
+            .then((body) => {
+                // console.log(body);
+                this.categoryList = body.data;
+            });
+        },
         fetchBlogList() {
             this.blogList = [];
             return fetch(`http://localhost:8080/api/posts`, {
@@ -25,8 +38,14 @@ export const useBlogStore = defineStore("blog", {
                 console.log(body);
                 this.blogList = body.data;
             });
+            // BlogDataService.getAll()
+            // .then(res => {
+            //     console.log(res.data)
+            //     this.blogList = res.data;
+            //     console.log(this.blogList)
+            // })
         },
-        addToList(titleInput, descInput) {
+        addToList(titleInput, descInput, categoryInput) {
             return fetch("http://localhost:8080/api/posts", {
             method: "POST",
             headers: {
@@ -35,6 +54,7 @@ export const useBlogStore = defineStore("blog", {
             body: JSON.stringify({
                 title: titleInput,
                 body: descInput,
+                categoryName: categoryInput,
             }),
         })
             .then((res) => res.json())
@@ -44,7 +64,10 @@ export const useBlogStore = defineStore("blog", {
             } else {
                 // console.log(body)
                 alert(body.status);
+                console.log(categoryInput)
                 this.error = "";
+                // this.titleInput = "";
+                // this.descInput = "";
             }
             this.fetchBlogList();
             })
@@ -60,10 +83,10 @@ export const useBlogStore = defineStore("blog", {
             item.editing = !item.editing;
             this.editingItemId = item.editing ? item.id : null;
             if (!item.editing) {
-                this.updateItem(item);
+                this.updateBlog(item);
             }
         },
-        updateItem(item) {
+        updateBlog(item) {
             return fetch(`http://localhost:8080/api/posts/${item.id}`, {
                 method: "PUT",
                 headers: {
@@ -72,6 +95,7 @@ export const useBlogStore = defineStore("blog", {
                 body: JSON.stringify({
                     title: item.title,
                     body: item.body,
+                    categoryName: item.categoryName,
                 }),
             })
             .then((res) => res.json())
@@ -87,13 +111,32 @@ export const useBlogStore = defineStore("blog", {
                 console.error("Error updating item:", error);
             });
         },
-        deleteItem(id) {
+        deleteBlog(id) {
             return fetch(`http://localhost:8080/api/posts/${id}`, {
                 method: "DELETE",
             })
             // .then((res) => res.json())
             .then(() => {
                 this.fetchBlogList();
+            });
+            // BlogDataService.delete(id)
+            // .then(response => {
+            //     console.log(response.data);
+            //     this.fetchBlogList();
+            // })
+            // .catch(e => {
+            //     console.log(e);
+            // });
+        },
+        sortPostsByCategory(id) {
+            this.blogList = [];
+            return fetch(`http://localhost:8080/api/posts/categories/${id}`, {
+                method: "GET",
+            })
+            .then((res) => res.json())
+            .then((body) => {
+                console.log(body);
+                this.blogList = body.data;
             });
         },
     },

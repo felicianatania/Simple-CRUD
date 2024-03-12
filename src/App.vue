@@ -6,41 +6,80 @@
       <InputField label="Title" inputId="title" v-model="titleInput" />
       <!-- <p>{{ titleInput }}</p> -->
       <InputField label="Description" inputId="desc" v-model="descInput" />
+      <select class="" v-model="categoryInput">
+        <option>Choose Category</option>
+        <option v-for="category in categoryList" v-bind:value="category.name">
+          {{ category.name }}
+        </option>
+      </select>
       <p v-if="isError" class="error">{{ this.error }}</p>
       <ButtonComponent
         bg-color="#00A36C"
         padding="10px 20px"
         text="Add"
-        @click="addToList(titleInput, descInput);"
+        @click="handleAddToList(titleInput, descInput, categoryInput)"
       ></ButtonComponent>
     </div>
   </div>
-  <div class="card-container">
-    <!-- <div v-for="(item, index) in blogList.posts" :key="index" class="card"> -->
-    <div v-for="item in blogList" :key="item.id" class="card">
-      <div class="card-body">
-        <h2 v-if="!item.editing">{{ item.title }}</h2>
-        <div v-else>
-          <input type="text" v-model="item.title" class="edit-input" />
+
+  <div class="container">
+    <select class="" v-model="sortInput">
+      <option selected>Choose Category</option>
+      <option
+        v-for="category in categoryList"
+        :key="category.id"
+        :value="category.id"
+      >
+        {{ category.name }}
+      </option>
+    </select>
+    <button @click="sortPostsByCategory(sortInput)">Sort</button>
+  </div>
+
+  <div>
+    <div v-if="blogList.length === 0">
+      <p>No posts to display.</p>
+    </div>
+    <div v-else class="card-container">
+      <!-- <div v-for="(item, index) in blogList.posts" :key="index" class="card"> -->
+      <div v-for="item in blogList" :key="item.id" class="card">
+        <div class="card-body">
+          <h2 v-if="!item.editing">{{ item.title }}</h2>
+          <div v-else>
+            <input type="text" v-model="item.title" class="edit-input" />
+          </div>
+          <div v-if="!item.editing">{{ item.body }}</div>
+          <div v-else>
+            <input type="text" v-model="item.body" class="edit-input" />
+          </div>
+          <div v-if="!item.editing">{{ item.categoryId }}</div>
+          <div v-else>
+            <select class="" v-model="item.categoryName">
+              <option selected>Choose Category</option>
+              <option
+                v-for="category in categoryList"
+                :key="category.id"
+                :value="category.name"
+              >
+                {{ category.name }}
+              </option>
+            </select>
+          </div>
         </div>
-        <div v-if="!item.editing">{{ item.body }}</div>
-        <div v-else>
-          <input type="text" v-model="item.body" class="edit-input" />
+        <!-- <div>{{ index + 1 }}</div> -->
+        <div class="action">
+          <ButtonComponent
+            padding="10px 20px"
+            text="Edit"
+            @click="toggleEdit(item)"
+          ></ButtonComponent>
+          <ButtonComponent
+            bg-color="#FF6961"
+            padding="10px 20px"
+            text="Delete"
+            @click="deleteBlog(item.id)"
+          ></ButtonComponent>
         </div>
-      </div>
-      <!-- <div>{{ index + 1 }}</div> -->
-      <div class="action">
-        <ButtonComponent
-          padding="10px 20px"
-          text="Edit"
-          @click="toggleEdit(item)"
-        ></ButtonComponent>
-        <ButtonComponent
-          bg-color="#FF6961"
-          padding="10px 20px"
-          text="Delete"
-          @click="deleteItem(item.id)"
-        ></ButtonComponent>
       </div>
     </div>
   </div>
@@ -57,10 +96,13 @@ export default {
     return {
       titleInput: "",
       descInput: "",
+      categoryInput: "",
+      sortInput: 0,
+      selected: "Choose Category",
     };
   },
   computed: {
-    ...mapState(useBlogStore, ["blogList", "error"]),
+    ...mapState(useBlogStore, ["blogList", "error", "categoryList"]),
     isError() {
       return this.error !== "";
     },
@@ -71,17 +113,31 @@ export default {
   },
   methods: {
     ...mapActions(useBlogStore, [
+      "fetchCategoryList",
       "fetchBlogList",
       "addToList",
       "toggleEdit",
-      "deleteItem",
+      "deleteBlog",
+      "sortPostsByCategory",
     ]),
-    clearInput(){
+    handleAddToList(titleInput, descInput, categoryInput) {
+      this.addToList(titleInput, descInput, categoryInput)
+        .then(() => {
+          this.clearInput(); // Call the clearInputFields action after successful addition
+        })
+        .catch((error) => {
+          console.error("Failed to add item:", error);
+          // Handle the error if necessary
+        });
+    },
+    clearInput() {
       this.titleInput = "";
       this.descInput = "";
+      this.categoryInput = "";
     },
   },
   created() {
+    this.fetchCategoryList();
     this.fetchBlogList();
   },
 };

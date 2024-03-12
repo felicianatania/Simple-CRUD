@@ -129,15 +129,19 @@ export const useBlogStore = defineStore("blog", {
             // });
         },
         sortPostsByCategory(id) {
-            this.blogList = [];
-            return fetch(`http://localhost:8080/api/posts/categories/${id}`, {
-                method: "GET",
-            })
-            .then((res) => res.json())
-            .then((body) => {
-                console.log(body);
-                this.blogList = body.data;
-            });
+            if (id === 0){
+                this.fetchBlogList(); 
+            } else{
+                this.blogList = [];
+                return fetch(`http://localhost:8080/api/posts/categories/${id}`, {
+                    method: "GET",
+                })
+                .then((res) => res.json())
+                .then((body) => {
+                    console.log(body);
+                    this.blogList = body.data;
+                });
+            }
         },
     },
 });

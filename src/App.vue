@@ -6,12 +6,7 @@
       <InputField label="Title" inputId="title" v-model="titleInput" />
       <!-- <p>{{ titleInput }}</p> -->
       <InputField label="Description" inputId="desc" v-model="descInput" />
-      <select class="" v-model="categoryInput">
-        <option>Choose Category</option>
-        <option v-for="category in categoryList" v-bind:value="category.name">
-          {{ category.name }}
-        </option>
-      </select>
+      <Dropdown id="component-dropdown" :options="categoryList" v-model="categoryInput"></Dropdown>
       <p v-if="isError" class="error">{{ this.error }}</p>
       <ButtonComponent
         bg-color="#00A36C"
@@ -22,9 +17,9 @@
     </div>
   </div>
 
-  <div class="container">
-    <select class="" v-model="sortInput">
-      <option selected>Choose Category</option>
+  <div class="dropdownn">
+    <select class="selectt-dropdown" v-model="sortInput">
+      <option :value="0" selected>All</option>
       <option
         v-for="category in categoryList"
         :key="category.id"
@@ -33,7 +28,12 @@
         {{ category.name }}
       </option>
     </select>
-    <button @click="sortPostsByCategory(sortInput)">Sort</button>
+    <ButtonComponent
+        bg-color="#E2DC5F"
+        padding="10px 20px"
+        text="Sort"
+        @click="sortPostsByCategory(sortInput)"
+      ></ButtonComponent>
   </div>
 
   <div>
@@ -54,16 +54,7 @@
           </div>
           <div v-if="!item.editing">{{ item.categoryId }}</div>
           <div v-else>
-            <select class="" v-model="item.categoryName">
-              <option selected>Choose Category</option>
-              <option
-                v-for="category in categoryList"
-                :key="category.id"
-                :value="category.name"
-              >
-                {{ category.name }}
-              </option>
-            </select>
+            <Dropdown id="component-dropdown" :options="categoryList" v-model="item.categoryName"></Dropdown>
           </div>
         </div>
         <!-- <div>{{ index + 1 }}</div> -->
@@ -88,6 +79,7 @@
 <script>
 import ButtonComponent from "./components/Button.vue";
 import InputField from "./components/Input.vue";
+import Dropdown from "./components/Select.vue";
 import { useBlogStore } from "./stores/blog.js";
 import { mapActions, mapState } from "pinia";
 
@@ -110,6 +102,7 @@ export default {
   components: {
     ButtonComponent,
     InputField,
+    Dropdown,
   },
   methods: {
     ...mapActions(useBlogStore, [
@@ -239,5 +232,40 @@ body {
   border-radius: 5px;
   padding: 5px;
   font-size: 14px;
+}
+
+.dropdownn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.selectt-dropdown {
+  width: 18vw;
+  height: 35px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  margin-right: 15px;
+  border-radius: 4px;
+}
+
+.selectt-dropdown:focus {
+  outline: none; /* Remove focus outline */
+}
+
+.selectt-dropdown::after {
+  content: "\25BC"; /* Unicode for down arrow */
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  pointer-events: none; /* Ensure the arrow doesn't interfere with clicking */
+}
+
+/* Style the options */
+.selectt-dropdown option {
+  padding: 8px;
+  background-color: #fff;
+  color: #333;
 }
 </style>

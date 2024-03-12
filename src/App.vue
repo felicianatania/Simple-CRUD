@@ -44,6 +44,10 @@
       <!-- <div v-for="(item, index) in blogList.posts" :key="index" class="card"> -->
       <div v-for="item in blogList" :key="item.id" class="card">
         <div class="card-body">
+          <span class="tag tag-blue" v-if="!item.editing">{{ getCategoryNameById(item.categoryId) }}</span>
+          <div v-else>
+            <Dropdown id="component-dropdown" :options="categoryList" v-model="item.categoryName" :categoryId="item.categoryId"></Dropdown>
+          </div>
           <h2 v-if="!item.editing">{{ item.title }}</h2>
           <div v-else>
             <input type="text" v-model="item.title" class="edit-input" />
@@ -51,10 +55,6 @@
           <div v-if="!item.editing">{{ item.body }}</div>
           <div v-else>
             <input type="text" v-model="item.body" class="edit-input" />
-          </div>
-          <div v-if="!item.editing">{{ item.categoryId }}</div>
-          <div v-else>
-            <Dropdown id="component-dropdown" :options="categoryList" v-model="item.categoryName"></Dropdown>
           </div>
         </div>
         <!-- <div>{{ index + 1 }}</div> -->
@@ -127,6 +127,10 @@ export default {
       this.titleInput = "";
       this.descInput = "";
       this.categoryInput = "";
+    },
+    getCategoryNameById(categoryId) {
+      const category = this.categoryList.find(c => c.id === categoryId);
+      return category ? category.name : "";
     },
   },
   created() {
@@ -267,5 +271,24 @@ body {
   padding: 8px;
   background-color: #fff;
   color: #333;
+}
+
+.tag {
+  align-self: flex-start;
+  padding: .25em .75em;
+  border-top-right-radius: 1em;
+  border-bottom-left-radius: 1em;
+  font-size: .80rem;
+}
+
+.tag + .tag {
+  margin-left: .5em;
+}
+
+.tag-blue {
+  background: linear-gradient(95deg, #46c535, #e7d321);
+  background: none;
+  border: 1px solid #fafafa;
+  color: #fafafa;
 }
 </style>

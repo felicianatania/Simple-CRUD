@@ -44,6 +44,10 @@ export default {
       // default: '',
       required: true,
     },
+    categoryId: {
+      type: String,
+      required: true
+    },
   },
 
   data() {
@@ -52,9 +56,12 @@ export default {
     };
   },
 
-  // mounted() {
-  //     this.categoryInput = this.value;
-  // },
+  mounted() {
+    if (this.categoryId) {
+      const selectedCategory = this.options.find(category => category.id === this.categoryId);
+      this.$emit('update:modelValue', selectedCategory.name);
+    }
+  },
 
   // watch: {
   //     value: function (newValue) {
